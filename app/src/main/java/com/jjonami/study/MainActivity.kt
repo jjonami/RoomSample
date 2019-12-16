@@ -2,6 +2,7 @@ package com.jjonami.study
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jjonami.study.db.Song
 import com.jjonami.study.db.SongDB
 import kotlinx.android.synthetic.main.activity_main.*
@@ -11,6 +12,7 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     private var songDB: SongDB? = null
     private var songList = listOf<Song>()
+    lateinit var adapter: SongAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +33,13 @@ class MainActivity : AppCompatActivity() {
         //Data를 읽고 쓸 때는 Thread 사용
         var runnable = Runnable {
             songList = songDB?.songDao()?.selectAllList()!!
+            adapter = SongAdapter(this, songList)
+            adapter.notifyDataSetChanged()
+
+            recyclerView.adapter = adapter
+            recyclerView.layoutManager = LinearLayoutManager(this)
+            recyclerView.setHasFixedSize(true)
+
         }
         val thread = Thread(runnable)
         thread.start()
@@ -54,6 +63,11 @@ class MainActivity : AppCompatActivity() {
             cal.time = Date()
             val df = SimpleDateFormat("yyyy-MM-dd")
             newSong.releaseDate =  df.format(cal.time).toString()
+
+            songDB?.songDao()?.insert(newSong)
         }
+
+        var addThread = Thread(addRunnable)
+        addThread.start()
     }
 }
